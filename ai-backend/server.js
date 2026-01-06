@@ -6,7 +6,19 @@ import fetch from "node-fetch";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+/* ✅ CORRECT CORS CONFIG */
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL, // frontend URL
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// ✅ Handle preflight requests
+app.options("*", cors());
+
 app.use(express.json());
 
 app.post("/api/chat", async (req, res) => {
@@ -18,9 +30,9 @@ app.post("/api/chat", async (req, res) => {
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": process.env.FRONTEND_URL || "http://localhost:5173",
+          "HTTP-Referer": process.env.FRONTEND_URL,
           "X-Title": "AI Chat App",
         },
         body: JSON.stringify({
