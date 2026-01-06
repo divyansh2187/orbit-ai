@@ -6,47 +6,31 @@ dotenv.config();
 
 const app = express();
 
-/**
- * ✅ EXPLICIT FRONTEND ORIGIN
- * (Do NOT rely on env for CORS — this avoids silent failure)
- */
 const ALLOWED_ORIGIN = "https://orbit-ai-1.onrender.com";
 
-/**
- * ✅ CORS CONFIG (PRODUCTION SAFE)
- */
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow server-to-server & same-origin requests
-      if (!origin) return callback(null, true);
+/* ✅ SINGLE CORS CONFIG (used everywhere) */
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // server-to-server
+    if (origin === ALLOWED_ORIGIN) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-      if (origin === ALLOWED_ORIGIN) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-// ✅ Preflight requests
-app.options("*", cors());
+/* ✅ Apply SAME config */
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
-/**
- * ✅ CHAT API
- */
+/* ✅ API */
 app.post("/api/chat", async (req, res) => {
   try {
     const { message } = req.body;
-
-    if (!message) {
-      return res.status(400).json({ error: "Message is required" });
-    }
 
     const response = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -67,30 +51,20 @@ app.post("/api/chat", async (req, res) => {
 
     const data = await response.json();
 
-    if (!data.choices || !data.choices.length) {
-      console.error("OpenRouter response:", data);
-      return res.status(500).json({ error: "Invalid AI response" });
-    }
-
     res.json({
-      reply: data.choices[0].message.content,
+      reply: data.choices?.[0]?.message?.content || "No response",
     });
-  } catch (error) {
-    console.error("SERVER ERROR:", error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server crashed" });
   }
 });
 
-/**
- * ✅ ROOT ROUTE (OPTIONAL BUT GOOD)
- */
+/* ✅ Health check */
 app.get("/", (req, res) => {
-  res.send("Orbit AI Backend is running 🚀");
+  res.send("Backend running");
 });
 
-/**
- * ✅ START SERVER (RENDER SAFE)
- */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
