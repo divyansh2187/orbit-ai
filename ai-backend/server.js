@@ -6,13 +6,7 @@ import fetch from "node-fetch";
 dotenv.config();
 
 const app = express();
-
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "*",
-  })
-);
-
+app.use(cors());
 app.use(express.json());
 
 app.post("/api/chat", async (req, res) => {
@@ -24,7 +18,7 @@ app.post("/api/chat", async (req, res) => {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
           "HTTP-Referer": process.env.FRONTEND_URL || "http://localhost:5173",
           "X-Title": "AI Chat App",
@@ -36,13 +30,12 @@ app.post("/api/chat", async (req, res) => {
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("OpenRouter error:", errorText);
-      return res.status(500).json({ error: "AI service failed" });
-    }
-
     const data = await response.json();
+
+    if (!data.choices) {
+      console.error("OpenRouter response:", data);
+      return res.status(500).json({ error: "Invalid AI response" });
+    }
 
     res.json({
       reply: data.choices[0].message.content,
