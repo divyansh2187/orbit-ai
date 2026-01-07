@@ -8,7 +8,7 @@ const limitWords = (text, limit = 4) => {
 };
 
 const SideBar = () => {
-  const [extended, setExtended] = useState(true);
+  const [extended, setExtended] = useState(false);
   const { messages, setActiveChat, activeChat, theme, toggleTheme } = useChat();
 
   const recentPrompts = messages.filter((msg) => msg.role === "user").slice(-10).reverse();
