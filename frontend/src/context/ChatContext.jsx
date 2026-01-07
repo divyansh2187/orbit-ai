@@ -3,12 +3,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
-  const [messages, setMessages] = useState([]); // recent chats
+  const [messages, setMessages] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState("light");
 
-  // Apply theme
+  // Apply theme to <html> tag
   useEffect(() => {
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
@@ -17,26 +17,8 @@ export const ChatProvider = ({ children }) => {
     }
   }, [theme]);
 
-  // Add a new chat
-  const addChat = (chat) => {
-    setMessages((prev) => [chat, ...prev]);
-  };
-
-  // Update chat response
-  const updateChat = (id, response) => {
-    setMessages((prev) =>
-      prev.map((chat) =>
-        chat.id === id
-          ? { ...chat, response, loading: false }
-          : chat
-      )
-    );
-
-    setActiveChat((prev) =>
-      prev && prev.id === id
-        ? { ...prev, response, loading: false }
-        : prev
-    );
+  const addMessage = (role, content) => {
+    setMessages((prev) => [...prev, { role, content }]);
   };
 
   const toggleTheme = () => {
@@ -47,14 +29,13 @@ export const ChatProvider = ({ children }) => {
     <ChatContext.Provider
       value={{
         messages,
+        addMessage,
         activeChat,
         setActiveChat,
-        addChat,
-        updateChat,
-        loading,
-        setLoading,
         theme,
         toggleTheme,
+        loading,
+        setLoading,
       }}
     >
       {children}
