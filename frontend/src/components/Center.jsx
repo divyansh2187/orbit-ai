@@ -157,7 +157,9 @@ const Center = () => {
               <SendHorizontal />
             </button>
           </div>
+          <p className="text-center text-gray-400 text-[1vw]">ORBIT may display inaccurate info, including about people, so double-check its responses</p>
         </div>
+      <p className="text-center text-blue-500 text-[9px] font-bold">Orbit AI · Built by Divyanshu · v1.0</p>
       </div>
     </div>
   );
