@@ -21,7 +21,7 @@ const Center = () => {
     theme,
   } = useChat();
 
-  // SEND PROMPT
+ 
   const sendPrompt = async (msg) => {
     const message = msg || prompt;
     if (!message.trim() || loading) return;
@@ -39,7 +39,7 @@ const Center = () => {
 
       const data = await res.json();
 
-      // Store messages ONLY (single source of truth)
+    
       addMessage("user", message);
       addMessage("ai", data.reply);
     } catch (err) {
@@ -50,7 +50,7 @@ const Center = () => {
     }
   };
 
-  // ✅ DERIVE RESPONSE FROM messages + activeChat (ONE place only)
+  
   useEffect(() => {
     if (!activeChat) {
       setResponse("");
@@ -71,7 +71,7 @@ const Center = () => {
     }
   }, [messages, activeChat]);
 
-  // ✅ PERFECT TYPING EFFECT (NO missing letters, NO undefined)
+
   useEffect(() => {
     if (!response || response.length === 0) return;
 
