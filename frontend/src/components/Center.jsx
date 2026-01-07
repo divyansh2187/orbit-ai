@@ -27,7 +27,7 @@ const Center = () => {
 
     setLoading(true);
     setusermess(message);
-    setActiveChat(message); // ✅ FIX: sync active chat immediately
+    setActiveChat(message);
 
     try {
       const res = await fetch("https://orbit-ai-1s0s.onrender.com/api/chat", {
@@ -38,9 +38,9 @@ const Center = () => {
 
       const data = await res.json();
 
+      // ✅ ONLY store messages
       addMessage("user", message);
       addMessage("ai", data.reply);
-      setResponse(data.reply); // keep local state (no refactor)
 
     } catch (err) {
       console.error(err);
@@ -50,20 +50,26 @@ const Center = () => {
     }
   };
 
-  // Typing effect
+  // ✅ SAFE typing effect (NO undefined)
   useEffect(() => {
-    if (!response) return;
+    if (!response || response.length === 0) return;
+
     setTypedResponse("");
     let index = 0;
+
     const interval = setInterval(() => {
-      setTypedResponse((prev) => prev + response[index]);
-      index++;
-      if (index >= response.length) clearInterval(interval);
+      if (index < response.length) {
+        setTypedResponse((prev) => prev + response[index]);
+        index++;
+      } else {
+        clearInterval(interval);
+      }
     }, 20);
+
     return () => clearInterval(interval);
   }, [response]);
 
-  // ✅ FIXED: reliable sync with messages + activeChat
+  // ✅ SINGLE place where response is derived
   useEffect(() => {
     if (!activeChat) {
       setResponse("");
@@ -80,7 +86,6 @@ const Center = () => {
 
     if (aiMessage?.role === "ai") {
       setResponse(aiMessage.content);
-      setTypedResponse(aiMessage.content);
       setusermess(activeChat);
     }
   }, [messages, activeChat]);
@@ -93,32 +98,27 @@ const Center = () => {
     >
       <Nav />
 
-      <div className="py-5 sm:py-15 px-6 justify-center md:px-30 flex flex-col gap-10">
+      <div className="py-5 px-6 md:px-30 flex flex-col gap-10">
         {!usermess ? (
           <div>
             <h2 className="text-7xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               Hello
             </h2>
-            <p className={`text-3xl font-bold ${
-              theme === "light" ? "text-gray-800" : "text-gray-300"
-            }`}>
+            <p className="text-3xl font-bold text-gray-400">
               How can I help you today?
             </p>
           </div>
         ) : (
           <div className="flex gap-2 items-center">
-            <Orbit
-              className="size-10"
-              color={theme === "light" ? "#3B82F6" : "#FACC15"}
-            />
-            <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent text-3xl font-bold">
+            <Orbit className="size-10" />
+            <span className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               {usermess}
             </span>
           </div>
         )}
 
         {loading && (
-          <div className="h-full w-full flex justify-center">
+          <div className="flex justify-center">
             <div className="loader"></div>
           </div>
         )}
@@ -127,7 +127,7 @@ const Center = () => {
 
         {!loading && response && (
           <div
-            className={`w-[88%] p-4 rounded-2xl text-base ${
+            className={`w-[88%] p-4 rounded-2xl ${
               theme === "light" ? "bg-[#F4F6FA]" : "bg-gray-700"
             }`}
           >
@@ -137,7 +137,7 @@ const Center = () => {
 
         <div className="flex flex-col gap-2">
           <div
-            className={`px-3 py-2 flex justify-between items-center rounded-2xl ${
+            className={`px-3 py-2 flex items-center rounded-2xl ${
               theme === "light"
                 ? "bg-[#E3E7EC] text-black"
                 : "bg-gray-700 text-white"
@@ -146,7 +146,7 @@ const Center = () => {
             <input
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              className="w-[95%] bg-transparent outline-none"
+              className="w-full bg-transparent outline-none"
               placeholder="Enter a prompt here"
               onKeyDown={(e) => e.key === "Enter" && sendPrompt()}
             />
