@@ -21,6 +21,7 @@ const Center = () => {
     theme,
   } = useChat();
 
+  // SEND PROMPT
   const sendPrompt = async (msg) => {
     const message = msg || prompt;
     if (!message.trim() || loading) return;
@@ -38,10 +39,9 @@ const Center = () => {
 
       const data = await res.json();
 
-      // ✅ ONLY store messages
+      // Store messages ONLY (single source of truth)
       addMessage("user", message);
       addMessage("ai", data.reply);
-
     } catch (err) {
       console.error(err);
     } finally {
@@ -50,26 +50,7 @@ const Center = () => {
     }
   };
 
-  // ✅ SAFE typing effect (NO undefined)
-  useEffect(() => {
-    if (!response || response.length === 0) return;
-
-    setTypedResponse("");
-    let index = 0;
-
-    const interval = setInterval(() => {
-      if (index < response.length) {
-        setTypedResponse((prev) => prev + response[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 20);
-
-    return () => clearInterval(interval);
-  }, [response]);
-
-  // ✅ SINGLE place where response is derived
+  // ✅ DERIVE RESPONSE FROM messages + activeChat (ONE place only)
   useEffect(() => {
     if (!activeChat) {
       setResponse("");
@@ -89,6 +70,28 @@ const Center = () => {
       setusermess(activeChat);
     }
   }, [messages, activeChat]);
+
+  // ✅ PERFECT TYPING EFFECT (NO missing letters, NO undefined)
+  useEffect(() => {
+    if (!response || response.length === 0) return;
+
+    let index = 0;
+    setTypedResponse("");
+
+    const interval = setInterval(() => {
+      setTypedResponse((prev) => {
+        if (index >= response.length) {
+          clearInterval(interval);
+          return prev;
+        }
+        const nextChar = response.charAt(index);
+        index++;
+        return prev + nextChar;
+      });
+    }, 20);
+
+    return () => clearInterval(interval);
+  }, [response]);
 
   return (
     <div
