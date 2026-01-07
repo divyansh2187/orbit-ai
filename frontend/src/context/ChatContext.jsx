@@ -8,7 +8,6 @@ export const ChatProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState("light");
 
-  // Apply theme to <html> tag
   useEffect(() => {
     if (theme === "dark") {
       document.documentElement.classList.add("dark");

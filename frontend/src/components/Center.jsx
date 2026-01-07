@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Card from "./Card";
 import { Orbit, SendHorizontal } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -12,7 +11,15 @@ const Center = () => {
   const [typedResponse, setTypedResponse] = useState("");
   const [usermess, setusermess] = useState("");
 
-  const { messages, addMessage, activeChat, loading, setLoading, theme } = useChat();
+  const {
+    messages,
+    addMessage,
+    activeChat,
+    setActiveChat,
+    loading,
+    setLoading,
+    theme,
+  } = useChat();
 
   const sendPrompt = async (msg) => {
     const message = msg || prompt;
@@ -20,6 +27,7 @@ const Center = () => {
 
     setLoading(true);
     setusermess(message);
+    setActiveChat(message); // ✅ FIX: sync active chat immediately
 
     try {
       const res = await fetch("https://orbit-ai-1s0s.onrender.com/api/chat", {
@@ -27,10 +35,13 @@ const Center = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
       });
+
       const data = await res.json();
-      setResponse(data.reply);
+
       addMessage("user", message);
       addMessage("ai", data.reply);
+      setResponse(data.reply); // keep local state (no refactor)
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -52,7 +63,7 @@ const Center = () => {
     return () => clearInterval(interval);
   }, [response]);
 
-  // Show recent clicked chat
+  // ✅ FIXED: reliable sync with messages + activeChat
   useEffect(() => {
     if (!activeChat) {
       setResponse("");
@@ -61,16 +72,18 @@ const Center = () => {
       return;
     }
 
-    const index = messages.findIndex(
+    const userIndex = messages.findIndex(
       (msg) => msg.role === "user" && msg.content === activeChat
     );
 
-    if (index !== -1 && messages[index + 1]?.role === "ai") {
-      setResponse(messages[index + 1].content);
-      setTypedResponse(messages[index + 1].content);
+    const aiMessage = messages[userIndex + 1];
+
+    if (aiMessage?.role === "ai") {
+      setResponse(aiMessage.content);
+      setTypedResponse(aiMessage.content);
       setusermess(activeChat);
     }
-  }, [activeChat, messages]);
+  }, [messages, activeChat]);
 
   return (
     <div
@@ -78,14 +91,17 @@ const Center = () => {
         theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"
       }`}
     >
-      <Nav/>
+      <Nav />
+
       <div className="py-5 sm:py-15 px-6 justify-center md:px-30 flex flex-col gap-10">
         {!usermess ? (
           <div>
             <h2 className="text-7xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
               Hello
             </h2>
-            <p className={`text-3xl font-bold ${theme === "light" ? "text-gray-800" : "text-gray-300"}`}>
+            <p className={`text-3xl font-bold ${
+              theme === "light" ? "text-gray-800" : "text-gray-300"
+            }`}>
               How can I help you today?
             </p>
           </div>
@@ -93,7 +109,7 @@ const Center = () => {
           <div className="flex gap-2 items-center">
             <Orbit
               className="size-10"
-              color={theme === "light" ? "#3B82F6" : "#FACC15"} 
+              color={theme === "light" ? "#3B82F6" : "#FACC15"}
             />
             <span className="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent text-3xl font-bold">
               {usermess}
@@ -103,7 +119,7 @@ const Center = () => {
 
         {loading && (
           <div className="h-full w-full flex justify-center">
-            <div className="loader" ></div>
+            <div className="loader"></div>
           </div>
         )}
 
@@ -111,7 +127,7 @@ const Center = () => {
 
         {!loading && response && (
           <div
-            className={`w-[88%] p-4 rounded-2xl text-base overflow-hidden transition-colors duration-300 ${
+            className={`w-[88%] p-4 rounded-2xl text-base ${
               theme === "light" ? "bg-[#F4F6FA]" : "bg-gray-700"
             }`}
           >
@@ -121,27 +137,22 @@ const Center = () => {
 
         <div className="flex flex-col gap-2">
           <div
-            className={`w-[100%] md:[88%] px-3 py-2 flex justify-between items-center rounded-2xl transition-colors duration-300 ${
-              theme === "light" ? "bg-[#E3E7EC] text-black" : "bg-gray-700 text-white"
+            className={`px-3 py-2 flex justify-between items-center rounded-2xl ${
+              theme === "light"
+                ? "bg-[#E3E7EC] text-black"
+                : "bg-gray-700 text-white"
             }`}
           >
             <input
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              type="text"
-              className={`w-[95%] h-full border-none outline-none focus:ring-0 bg-transparent ${theme === "dark" ? "text-white" : "text-black"}`}
+              className="w-[95%] bg-transparent outline-none"
               placeholder="Enter a prompt here"
               onKeyDown={(e) => e.key === "Enter" && sendPrompt()}
             />
             <button onClick={() => sendPrompt()} disabled={loading}>
-              <SendHorizontal className={loading ? "opacity-50" : ""} />
+              <SendHorizontal />
             </button>
-          </div>
-
-          <div className={`text-center w-[90%] font-thin text-[2vw] md:text-[1.5vw] transition-colors duration-300 ${
-            theme === "light" ? "text-gray-500" : "text-gray-400"
-          }`}>
-            Orbit may display inaccurate info, including about people, so double-check its responses.
           </div>
         </div>
       </div>
