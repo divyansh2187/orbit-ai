@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 
 dotenv.config();
 
@@ -8,26 +9,15 @@ const app = express();
 
 const ALLOWED_ORIGIN = "https://orbit-ai-1.onrender.com";
 
-/* ✅ SINGLE CORS CONFIG (used everywhere) */
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // server-to-server
-    if (origin === ALLOWED_ORIGIN) {
-      return callback(null, true);
-    }
-    return callback(null, false);
-  },
+app.use(cors({
+  origin: ALLOWED_ORIGIN,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-};
+}));
 
-/* ✅ Apply SAME config */
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
-
+app.options("*", cors());
 app.use(express.json());
 
-/* ✅ API */
 app.post("/api/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -60,7 +50,6 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-/* ✅ Health check */
 app.get("/", (req, res) => {
   res.send("Backend running");
 });
