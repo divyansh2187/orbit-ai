@@ -31,7 +31,7 @@ const Center = () => {
     setActiveChat(message);
 
     try {
-      const res = await fetch("https://orbit-ai-1s0s.onrender.com/api/chat", {
+      const res = await fetch("https://orbit-ai-by25.onrender.com/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),

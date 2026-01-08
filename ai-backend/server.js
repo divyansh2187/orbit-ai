@@ -6,7 +6,7 @@ dotenv.config();
 
 const app = express();
 
-const ALLOWED_ORIGIN = "https://orbit-ai-1.onrender.com";
+const ALLOWED_ORIGIN = "https://orbit-ai-1-8dpq.onrender.com";
 
 app.use(
   cors({
